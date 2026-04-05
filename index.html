@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>大腦視力同步訓練營</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -19,11 +19,11 @@
             touch-action: manipulation;
         }
         
-        /* 16:9 容器 - 增加響應式處理 */
+        /* 16:9 容器 */
         .viewport-16-9 {
             width: 95vw;
             max-width: 1400px;
-            max-height: 85vh;
+            max-height: 80vh; 
             aspect-ratio: 16 / 9;
             background-color: #1e293b;
             border: 4px solid #334155;
@@ -36,7 +36,7 @@
 
         @media (max-aspect-ratio: 16/9) {
             .viewport-16-9 {
-                width: 95vw;
+                width: 98vw;
                 height: auto;
             }
         }
@@ -48,6 +48,8 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            padding: 10px;
+            overflow: hidden; 
         }
 
         .divider {
@@ -57,17 +59,29 @@
             align-self: center;
         }
 
+        .symbol-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
         .symbol-svg {
             transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
+            max-width: 100%;
+            max-height: 100%;
         }
 
         .hand-tag {
             position: absolute;
-            top: 6%;
-            font-size: clamp(0.9rem, 2.5vw, 1.8rem);
+            top: 5%;
+            font-size: clamp(0.8rem, 2.2vw, 1.6rem);
             font-weight: 900;
-            padding: 0.4rem 2rem;
+            padding: 0.3rem 1.5rem;
             border-radius: 9999px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.4);
             z-index: 10;
@@ -75,13 +89,12 @@
         .tag-left { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; }
         .tag-right { background: linear-gradient(135deg, #22c55e, #15803d); color: white; }
         
-        /* 設定視窗 - 左上角 */
         #settingsModal {
             position: fixed;
             top: 15px;
             left: 15px;
             width: 90vw;
-            max-width: 380px;
+            max-width: 360px;
             background: #1e293b;
             border: 2px solid #3b82f6;
             border-radius: 1.5rem;
@@ -91,15 +104,15 @@
         }
 
         #settingsModal.collapsed {
-            width: 56px;
-            height: 56px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             overflow: hidden;
             border-color: #334155;
         }
 
         .modal-header {
-            padding: 1rem;
+            padding: 0.8rem;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -110,8 +123,8 @@
         .collapsed .modal-header { height: 100%; justify-content: center; padding: 0; }
 
         .modal-content {
-            padding: 1.2rem;
-            max-height: 75vh;
+            padding: 1rem;
+            max-height: 70vh;
             overflow-y: auto;
         }
 
@@ -123,8 +136,10 @@
             background-color: #3b82f6 !important;
             border-color: #60a5fa !important;
             color: white !important;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
         }
+
+        input[type=range] { accent-color: #3b82f6; }
 
         .main-title {
             animation: pulse-title 4s infinite ease-in-out;
@@ -134,94 +149,98 @@
             50% { transform: scale(0.98); opacity: 0.9; }
         }
 
-        /* 隱藏 YouTube 播放器 */
-        #ytPlayerContainer {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-        }
+        #ytPlayerContainer { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <!-- YouTube API 容器 -->
     <div id="ytPlayerContainer"><div id="player"></div></div>
 
     <!-- 頂部資訊列 -->
-    <div class="fixed top-4 right-4 flex gap-3 md:gap-6 items-center z-50">
-        <div id="timerDisplay" class="bg-blue-900/50 border border-blue-500/50 px-4 md:px-6 py-1 md:py-2 rounded-xl text-xl md:text-2xl font-mono text-blue-300 hidden">
-            00:00
-        </div>
-        <div id="statusIndicator" class="px-4 py-1 rounded-full bg-slate-800 text-[10px] md:text-xs font-bold text-slate-400 border border-slate-700">
-            READY
-        </div>
+    <div class="fixed top-4 right-4 flex gap-2 md:gap-4 items-center z-50">
+        <div id="timerDisplay" class="bg-blue-900/50 border border-blue-500/50 px-3 py-1 rounded-lg text-lg md:text-2xl font-mono text-blue-300 hidden">00:00</div>
+        <div id="statusIndicator" class="px-3 py-1 rounded-full bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">READY</div>
     </div>
 
     <!-- 遊戲標題 -->
-    <div class="mb-4 md:mb-6 text-center px-4">
-        <h1 class="main-title text-2xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tighter">
-            大腦視力同步訓練營
-        </h1>
+    <div class="mb-4 text-center px-4">
+        <h1 class="main-title text-xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tighter">大腦視力同步訓練營</h1>
     </div>
 
     <!-- 16:9 主畫面 -->
     <div class="viewport-16-9" id="gameViewport">
         <div id="zoneLeft" class="training-zone">
             <div id="tagLeft" class="hand-tag tag-left opacity-0">左手</div>
-            <div id="symbolLeft" class="symbol-svg">
-                <span class="text-slate-600 font-bold text-lg md:text-2xl tracking-widest px-6 text-center">點擊左上角齒輪開始</span>
+            <div id="symbolWrapperLeft" class="symbol-wrapper">
+                <div id="symbolLeft" class="symbol-svg text-slate-600 font-bold text-sm md:text-xl tracking-widest text-center">點擊左上角開始</div>
             </div>
         </div>
         <div id="centerDivider" class="divider hidden"></div>
         <div id="zoneRight" class="training-zone">
             <div id="tagRight" class="hand-tag tag-right opacity-0">右手</div>
-            <div id="symbolRight" class="symbol-svg"></div>
+            <div id="symbolWrapperRight" class="symbol-wrapper">
+                <div id="symbolRight" class="symbol-svg"></div>
+            </div>
         </div>
     </div>
 
     <!-- 設定控制台 -->
-    <div id="settingsModal" class="collapsed">
+    <div id="settingsModal" class="collapsed shadow-2xl">
         <div class="modal-header" onclick="toggleSettings()">
             <div class="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                <span class="modal-title font-black text-lg">設定與指南</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span class="modal-title font-black text-md">設定與指南</span>
             </div>
             <div id="closeIcon" class="text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 12-3-3-3 3"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 12-3-3-3 3"/></svg>
             </div>
         </div>
 
-        <div class="modal-content space-y-5">
-            <!-- 玩法指南 -->
-            <div class="p-3 bg-blue-900/30 rounded-xl border border-blue-500/30 text-[11px] leading-relaxed">
-                <h4 class="font-bold text-blue-300 mb-1">玩法說明：</h4>
-                <ul class="space-y-1 text-slate-300">
-                    <li>🎯 <b>單一中心：</b>單手比出正確開口方向。</li>
-                    <li>👐 <b>左右同時：</b>雙手同時比出左右各自的方向。</li>
-                    <li>🥁 <b>配合節拍：</b>跟著音樂節奏原地踏步或跑。</li>
-                </ul>
-            </div>
+        <div class="modal-content space-y-4">
+            <!-- 音效與音樂控制 -->
+            <div class="grid grid-cols-1 gap-3">
+                <!-- 音樂 -->
+                <div class="p-3 bg-emerald-900/20 rounded-xl border border-emerald-500/30 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-emerald-400">背景音樂</span>
+                        <button onclick="toggleMusic()" id="musicBtn" class="px-3 py-1 rounded-lg bg-slate-700 text-slate-400 text-[10px] font-bold border border-slate-600">點選開啟</button>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px]">
+                            <span>音樂音量</span><span id="musicVolTxt">50%</span>
+                        </div>
+                        <input type="range" id="musicVolIn" class="w-full h-1.5" min="0" max="100" value="50" oninput="updateSettings()">
+                    </div>
+                </div>
 
-            <!-- 音樂控制 -->
-            <div class="space-y-3 p-3 bg-emerald-900/20 rounded-xl border border-emerald-500/30">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-emerald-400">背景音樂 (YouTube)</span>
-                    <button onclick="toggleMusic()" id="musicBtn" class="px-4 py-1 rounded bg-slate-700 text-slate-400 text-[10px] font-bold border border-slate-600 transition-colors">點選開啟</button>
+                <!-- 互動音效 -->
+                <div class="p-3 bg-blue-900/20 rounded-xl border border-blue-500/30 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-blue-400">互動音效</span>
+                        <button onclick="toggleSfx()" id="sfxBtn" class="px-3 py-1 rounded-lg bg-emerald-500/40 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">已開啟</button>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[10px]">
+                            <span>音效音量</span><span id="sfxVolTxt">60%</span>
+                        </div>
+                        <input type="range" id="sfxVolIn" class="w-full h-1.5" min="0" max="100" value="60" oninput="updateSettings()">
+                    </div>
                 </div>
             </div>
 
-            <!-- 核心模式 -->
+            <!-- 核心與模式 -->
             <div class="space-y-2">
-                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">1. 核心模式</h3>
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">1. 訓練模式</h3>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="setMode('single')" id="m-single" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-xs">單一中心</button>
                     <button onclick="setMode('dual')" id="m-dual" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-xs">左右同時</button>
-                    <button onclick="setType('E')" id="t-E" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-xs">E 視標</button>
-                    <button onclick="setType('C')" id="t-C" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-xs">C 視標</button>
                 </div>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-3 gap-1">
+                    <button onclick="setType('E')" id="t-E" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-[10px]">E</button>
+                    <button onclick="setType('C')" id="t-C" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-[10px]">C</button>
+                    <button onclick="setType('mixed')" id="t-mixed" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-[10px]">EC 混合</button>
+                </div>
+                <div class="grid grid-cols-3 gap-1">
                     <button onclick="setSizeMode('manual')" id="sz-manual" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-[10px]">固定</button>
                     <button onclick="setSizeMode('random')" id="sz-random" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-[10px]">隨機</button>
                     <button onclick="setSizeMode('shrink')" id="sz-shrink" class="py-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-[10px]">遞減</button>
@@ -230,61 +249,52 @@
 
             <!-- 節奏與時間 -->
             <div class="space-y-3 p-3 bg-slate-800/50 rounded-xl">
-                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">2. 節奏與時間</h3>
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold">訓練時長</span>
                     <select id="timeSelect" onchange="updateTimeSetting()" class="bg-slate-700 border-none rounded text-xs px-2 py-1">
-                        <option value="60">1 分鐘</option>
-                        <option value="120">2 分鐘</option>
-                        <option value="180">3 分鐘</option>
-                        <option value="300">5 分鐘</option>
-                        <option value="0">不限時</option>
+                        <option value="60">1 分</option><option value="120">2 分</option><option value="180">3 分</option><option value="0">不限</option>
                     </select>
                 </div>
                 <hr class="border-slate-700">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold">節拍器</span>
-                    <button onclick="toggleMetronome()" id="metroBtn" class="px-4 py-1 rounded bg-slate-700 text-slate-400 text-[10px] font-bold border border-slate-600">已關閉</button>
+                    <span class="text-xs font-bold text-emerald-400">節拍器 (爵士鼓)</span>
+                    <button onclick="toggleMetronome()" id="metroBtn" class="px-3 py-1 rounded bg-slate-700 text-slate-400 text-[10px] font-bold border border-slate-600">已關閉</button>
                 </div>
-                <div>
-                    <div class="flex justify-between text-[10px] mb-1">
-                        <span>步頻 (BPM)</span>
-                        <span id="bpmTxt" class="text-emerald-400 font-mono">120</span>
+                <div class="space-y-1 mt-2">
+                    <div class="flex justify-between text-[10px]">
+                        <span>節拍音量</span><span id="metroVolTxt">30%</span>
                     </div>
-                    <input type="range" id="bpmIn" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer" min="90" max="200" step="1" value="120" oninput="updateSettings()">
+                    <input type="range" id="metroVolIn" class="w-full h-1.5" min="0" max="100" value="30" oninput="updateSettings()">
+                </div>
+                <div class="space-y-1 mt-2">
+                    <div class="flex justify-between text-[10px]">
+                        <span>步頻 (BPM)</span><span id="bpmTxt" class="text-emerald-400 font-mono">120</span>
+                    </div>
+                    <input type="range" id="bpmIn" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer" min="90" max="200" value="120" oninput="updateSettings()">
                 </div>
             </div>
 
             <!-- 精細調整 -->
-            <div class="space-y-4">
+            <div class="space-y-3">
                 <div id="manualSizeControl">
                     <div class="flex justify-between text-[10px] mb-1">
-                        <span>符號基準大小</span>
-                        <span id="sizeTxt" class="text-blue-400 font-mono">200px</span>
+                        <span>基準大小</span><span id="sizeTxt" class="text-blue-400 font-mono">200px</span>
                     </div>
-                    <input type="range" id="sizeIn" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer" min="40" max="400" step="10" value="200" oninput="updateSettings()">
+                    <input type="range" id="sizeIn" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer" min="40" max="500" step="10" value="200" oninput="updateSettings()">
                 </div>
                 <div>
                     <div class="flex justify-between text-[10px] mb-1">
-                        <span>變換速度 (秒)</span>
-                        <span id="speedTxt" class="text-blue-400 font-mono">2.0s</span>
+                        <span>變換速度</span><span id="speedTxt" class="text-blue-400 font-mono">2.0s</span>
                     </div>
                     <input type="range" id="speedIn" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer" min="0.3" max="5" step="0.1" value="2.0" oninput="updateSettings()">
                 </div>
             </div>
 
-            <div class="pt-2 space-y-2">
-                <button id="startBtn" onclick="toggleGame()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-black rounded-xl shadow-lg transition-all active:scale-95">
-                    開始訓練
-                </button>
-                <button onclick="toggleFullscreen()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-lg">
-                    全螢幕模式
-                </button>
-            </div>
+            <button id="startBtn" onclick="toggleGame()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-black rounded-xl transition-all">開始訓練</button>
+            <button onclick="toggleFullscreen()" class="w-full py-2 bg-slate-700 text-slate-200 text-[10px] font-bold rounded-lg">全螢幕模式</button>
         </div>
     </div>
 
-    <!-- YouTube IFrame Player API -->
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
@@ -294,12 +304,12 @@
         let metroInterval = null;
         let shrinkCounter = 0;
         let remainingTime = 0;
-        let player; // YouTube Player
+        let player;
         let audioCtx = null;
         
         let config = {
             mode: 'single',
-            type: 'E',
+            type: 'mixed',
             dir: '4',
             sizeMode: 'manual', 
             speed: 2.0,
@@ -307,29 +317,69 @@
             bpm: 120,
             metroOn: false,
             musicOn: false,
+            sfxOn: true,
+            musicVolume: 50,
+            metroVolume: 30,
+            sfxVolume: 60,
             gameLength: 60
         };
 
-        // YouTube API 初始化
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
-                height: '1',
-                width: '1',
-                videoId: '6HNWWIpuDxA',
-                playerVars: {
-                    'loop': 1,
-                    'playlist': '6HNWWIpuDxA',
-                    'autoplay': 0,
-                    'controls': 0
-                },
-                events: {
-                    'onReady': onPlayerReady
-                }
+                height: '1', width: '1', videoId: '6HNWWIpuDxA',
+                playerVars: { 'loop': 1, 'playlist': '6HNWWIpuDxA', 'autoplay': 0, 'controls': 0 },
+                events: { 'onReady': () => console.log("Music Ready") }
             });
         }
 
-        function onPlayerReady(event) {
-            console.log("Music Player Ready");
+        function playSound(type) {
+            if (!config.sfxOn) return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const vol = config.sfxVolume / 100;
+
+            if (type === 'tick') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol * 0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'start') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'end') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            }
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+        }
+
+        function playDrumClick() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(config.metroVolume / 100, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
         function toggleMusic() {
@@ -337,77 +387,53 @@
             config.musicOn = !config.musicOn;
             const btn = document.getElementById('musicBtn');
             if (config.musicOn) {
+                player.setVolume(config.musicVolume);
                 player.playVideo();
-                btn.innerText = "音樂播放中";
-                btn.classList.replace('text-slate-400', 'text-emerald-400');
-                btn.classList.add('border-emerald-500');
+                btn.innerText = "音樂: 開啟";
+                btn.classList.add('bg-emerald-500/40');
             } else {
                 player.pauseVideo();
-                btn.innerText = "已暫停";
+                btn.innerText = "音樂: 關閉";
+                btn.classList.remove('bg-emerald-500/40');
+            }
+        }
+
+        function toggleSfx() {
+            config.sfxOn = !config.sfxOn;
+            const btn = document.getElementById('sfxBtn');
+            if (config.sfxOn) {
+                btn.innerText = "已開啟";
+                btn.classList.add('bg-emerald-500/40');
+                btn.classList.replace('text-slate-400', 'text-emerald-400');
+                playSound('tick');
+            } else {
+                btn.innerText = "已關閉";
+                btn.classList.remove('bg-emerald-500/40');
                 btn.classList.replace('text-emerald-400', 'text-slate-400');
-                btn.classList.remove('border-emerald-500');
             }
         }
 
         const svgs = {
-            E: (size) => `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><path d="M20 20 H80 V35 H35 V42 H70 V57 H35 V65 H80 V80 H20 Z" fill="white"/></svg>`,
-            C: (size) => `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><path d="M50 15 C30 15 15 30 15 50 C15 70 30 85 50 85 C65 85 78 75 83 62 L68 58 C65 65 58 70 50 70 C39 70 30 61 30 50 C30 39 39 30 50 30 C58 30 65 35 68 42 L83 38 C78 25 65 15 50 15 Z" fill="white"/></svg>`
+            E: (size) => `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><path d="M20 20 H80 V35 H35 V42 H70 V57 H35 V65 H80 V80 H20 Z" fill="white"/></svg>`,
+            C: (size) => `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><path d="M50 15 C30 15 15 30 15 50 C15 70 30 85 50 85 C65 85 78 75 83 62 L68 58 C65 65 58 70 50 70 C39 70 30 61 30 50 C30 39 39 30 50 30 C58 30 65 35 68 42 L83 38 C78 25 65 15 50 15 Z" fill="white"/></svg>`
         };
 
-        function playDrumClick() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
-        }
+        function toggleSettings() { document.getElementById('settingsModal').classList.toggle('collapsed'); }
 
-        function toggleSettings() {
-            document.getElementById('settingsModal').classList.toggle('collapsed');
-        }
-
-        function setMode(m) {
-            config.mode = m;
-            updateUI();
-            if(isPlaying) restartInterval();
-        }
-
-        function setType(t) {
-            config.type = t;
-            updateUI();
-            if(isPlaying) refreshSymbols();
-        }
-
-        function setSizeMode(sm) {
-            config.sizeMode = sm;
-            shrinkCounter = 0; 
-            updateUI();
-            if(isPlaying) refreshSymbols();
-        }
-
-        function updateTimeSetting() {
-            config.gameLength = parseInt(document.getElementById('timeSelect').value);
-        }
+        function setMode(m) { config.mode = m; updateUI(); if(isPlaying) restartInterval(); }
+        function setType(t) { config.type = t; updateUI(); if(isPlaying) refreshSymbols(); }
+        function setSizeMode(sm) { config.sizeMode = sm; shrinkCounter = 0; updateUI(); if(isPlaying) refreshSymbols(); }
+        function updateTimeSetting() { config.gameLength = parseInt(document.getElementById('timeSelect').value); }
 
         function toggleMetronome() {
             config.metroOn = !config.metroOn;
             const btn = document.getElementById('metroBtn');
+            btn.innerText = config.metroOn ? "已開啟" : "已關閉";
             if(config.metroOn) {
-                btn.innerText = "已開啟";
-                btn.classList.replace('text-slate-400', 'text-emerald-400');
-                btn.classList.add('border-emerald-500');
+                btn.classList.add('text-emerald-400');
                 if(isPlaying) startMetronome();
             } else {
-                btn.innerText = "已關閉";
-                btn.classList.replace('text-emerald-400', 'text-slate-400');
-                btn.classList.remove('border-emerald-500');
+                btn.classList.remove('text-emerald-400');
                 stopMetronome();
             }
         }
@@ -416,9 +442,19 @@
             config.speed = document.getElementById('speedIn').value;
             config.baseSize = parseInt(document.getElementById('sizeIn').value);
             config.bpm = parseInt(document.getElementById('bpmIn').value);
+            config.musicVolume = parseInt(document.getElementById('musicVolIn').value);
+            config.metroVolume = parseInt(document.getElementById('metroVolIn').value);
+            config.sfxVolume = parseInt(document.getElementById('sfxVolIn').value);
+
             document.getElementById('speedTxt').innerText = config.speed + 's';
             document.getElementById('sizeTxt').innerText = config.baseSize + 'px';
             document.getElementById('bpmTxt').innerText = config.bpm;
+            document.getElementById('musicVolTxt').innerText = config.musicVolume + '%';
+            document.getElementById('metroVolTxt').innerText = config.metroVolume + '%';
+            document.getElementById('sfxVolTxt').innerText = config.sfxVolume + '%';
+
+            if(player && player.setVolume) player.setVolume(config.musicVolume);
+
             if(isPlaying) {
                 restartInterval();
                 if(config.metroOn) startMetronome();
@@ -433,138 +469,104 @@
             document.getElementById('m-' + config.mode).classList.add('btn-active');
             document.getElementById('t-' + config.type).classList.add('btn-active');
             document.getElementById('sz-' + config.sizeMode).classList.add('btn-active');
-            const sizeCtrl = document.getElementById('manualSizeControl');
-            sizeCtrl.style.display = config.sizeMode === 'manual' ? 'block' : 'none';
-            const divider = document.getElementById('centerDivider');
-            const zoneRight = document.getElementById('zoneRight');
-            const tagLeft = document.getElementById('tagLeft');
-            const tagRight = document.getElementById('tagRight');
+            document.getElementById('manualSizeControl').style.display = config.sizeMode === 'manual' ? 'block' : 'none';
+            
+            const div = document.getElementById('centerDivider');
+            const zR = document.getElementById('zoneRight');
+            const tL = document.getElementById('tagLeft');
+            const tR = document.getElementById('tagRight');
             if(config.mode === 'dual') {
-                divider.classList.remove('hidden');
-                tagLeft.classList.remove('opacity-0');
-                tagRight.classList.remove('opacity-0');
-                zoneRight.style.display = 'flex';
+                div.classList.remove('hidden'); tL.classList.remove('opacity-0'); tR.classList.remove('opacity-0'); zR.style.display = 'flex';
             } else {
-                divider.classList.add('hidden');
-                tagLeft.classList.add('opacity-0');
-                tagRight.classList.add('opacity-0');
-                zoneRight.style.display = 'none';
+                div.classList.add('hidden'); tL.classList.add('opacity-0'); tR.classList.add('opacity-0'); zR.style.display = 'none';
             }
         }
 
         function toggleGame() {
-            if(!isPlaying) startGame();
-            else stopGame();
-        }
-
-        function startGame() {
-            isPlaying = true;
-            shrinkCounter = 0;
-            const btn = document.getElementById('startBtn');
-            const status = document.getElementById('statusIndicator');
-            const timerBox = document.getElementById('timerDisplay');
-            btn.innerText = "停止訓練";
-            btn.classList.replace('bg-emerald-600', 'bg-red-600');
-            status.innerText = "正在訓練";
-            status.classList.replace('text-slate-400', 'text-emerald-400');
-            remainingTime = config.gameLength;
-            if(remainingTime > 0) {
-                timerBox.classList.remove('hidden');
-                updateTimerDisplay();
-                timerId = setInterval(() => {
-                    remainingTime--;
-                    updateTimerDisplay();
-                    if(remainingTime <= 0) stopGame();
-                }, 1000);
-            } else {
-                timerBox.classList.add('hidden');
-            }
-            document.getElementById('settingsModal').classList.add('collapsed');
-            restartInterval();
-            if(config.metroOn) startMetronome();
+            if(!isPlaying) {
+                isPlaying = true;
+                playSound('start');
+                const btn = document.getElementById('startBtn');
+                btn.innerText = "停止訓練"; btn.classList.replace('bg-emerald-600', 'bg-red-600');
+                document.getElementById('statusIndicator').innerText = "訓練中";
+                remainingTime = config.gameLength;
+                if(remainingTime > 0) {
+                    document.getElementById('timerDisplay').classList.remove('hidden');
+                    timerId = setInterval(() => {
+                        remainingTime--;
+                        updateTimerDisplay();
+                        if(remainingTime <= 0) stopGame();
+                    }, 1000);
+                }
+                toggleSettings();
+                restartInterval();
+                if(config.metroOn) startMetronome();
+            } else stopGame();
         }
 
         function stopGame() {
+            if (isPlaying) playSound('end');
             isPlaying = false;
             const btn = document.getElementById('startBtn');
-            const status = document.getElementById('statusIndicator');
-            const timerBox = document.getElementById('timerDisplay');
-            btn.innerText = "開始訓練";
-            btn.classList.replace('bg-red-600', 'bg-emerald-600');
-            status.innerText = "已暫停";
-            status.classList.replace('text-emerald-400', 'text-slate-400');
-            clearInterval(gameInterval);
-            clearInterval(timerId);
-            stopMetronome();
-            document.getElementById('symbolLeft').innerHTML = '<span class="text-slate-600 font-bold text-2xl tracking-widest">READY</span>';
+            btn.innerText = "開始訓練"; btn.classList.replace('bg-red-600', 'bg-emerald-600');
+            document.getElementById('statusIndicator').innerText = "已停止";
+            clearInterval(gameInterval); clearInterval(timerId); stopMetronome();
+            document.getElementById('symbolLeft').innerHTML = 'READY';
             document.getElementById('symbolRight').innerHTML = '';
         }
 
         function updateTimerDisplay() {
-            const m = Math.floor(remainingTime / 60);
-            const s = remainingTime % 60;
+            const m = Math.floor(remainingTime / 60), s = remainingTime % 60;
             document.getElementById('timerDisplay').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
-        function restartInterval() {
-            clearInterval(gameInterval);
-            refreshSymbols();
-            gameInterval = setInterval(refreshSymbols, config.speed * 1000);
-        }
-
-        function startMetronome() {
-            stopMetronome();
-            const ms = 60000 / config.bpm;
-            metroInterval = setInterval(playDrumClick, ms);
-        }
-
-        function stopMetronome() {
-            clearInterval(metroInterval);
-        }
+        function restartInterval() { clearInterval(gameInterval); refreshSymbols(); gameInterval = setInterval(refreshSymbols, config.speed * 1000); }
+        function startMetronome() { stopMetronome(); metroInterval = setInterval(playDrumClick, 60000 / config.bpm); }
+        function stopMetronome() { clearInterval(metroInterval); }
 
         function calculateCurrentSize() {
-            const MAX = 400;
-            const MIN = 30;
+            const MAX = 500, MIN = 30;
             if (config.sizeMode === 'manual') return config.baseSize;
             if (config.sizeMode === 'random') return Math.floor(Math.random() * (MAX - 40 + 1)) + 40;
             if (config.sizeMode === 'shrink') {
                 const s = MAX * Math.pow(0.92, shrinkCounter);
-                shrinkCounter++;
-                return Math.max(MIN, Math.floor(s));
+                shrinkCounter++; return Math.max(MIN, Math.floor(s));
             }
-            return config.baseSize;
         }
 
         function refreshSymbols() {
+            if (isPlaying) playSound('tick');
             const rotations = [0, 45, 90, 135, 180, 225, 270, 315];
-            const size = calculateCurrentSize();
-            const getSvg = () => svgs[config.type](size);
-            const rotL = rotations[Math.floor(Math.random() * rotations.length)];
-            const sLeft = document.getElementById('symbolLeft');
-            sLeft.innerHTML = getSvg();
-            sLeft.style.transform = `rotate(${rotL}deg) scale(0.6)`;
-            if(config.mode === 'dual') {
-                const rotR = rotations[Math.floor(Math.random() * rotations.length)];
-                const sRight = document.getElementById('symbolRight');
-                sRight.innerHTML = getSvg();
-                sRight.style.transform = `rotate(${rotR}deg) scale(0.6)`;
-                setTimeout(() => {
-                    sLeft.style.transform = `rotate(${rotL}deg) scale(1)`;
-                    sRight.style.transform = `rotate(${rotR}deg) scale(1)`;
-                }, 50);
-            } else {
-                setTimeout(() => { sLeft.style.transform = `rotate(${rotL}deg) scale(1)`; }, 50);
-            }
+            const sizeValue = calculateCurrentSize();
+            const getOneType = () => config.type === 'mixed' ? (Math.random() > 0.5 ? 'E' : 'C') : config.type;
+
+            const updateZone = (sId, wrapId) => {
+                const type = getOneType();
+                const rot = rotations[Math.floor(Math.random() * rotations.length)];
+                const el = document.getElementById(sId);
+                const wrap = document.getElementById(wrapId);
+                wrap.style.width = `${sizeValue}px`; wrap.style.height = `${sizeValue}px`;
+                el.innerHTML = svgs[type](sizeValue);
+                el.style.transform = `rotate(${rot}deg) scale(0.6)`;
+                setTimeout(() => el.style.transform = `rotate(${rot}deg) scale(1)`, 50);
+            };
+
+            updateZone('symbolLeft', 'symbolWrapperLeft');
+            if(config.mode === 'dual') updateZone('symbolRight', 'symbolWrapperRight');
         }
 
         function toggleFullscreen() {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const exitFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+            if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+                if (requestFullScreen) requestFullScreen.call(docEl);
+                else alert("此裝置不支援全螢幕 API");
+            } else { if (exitFullScreen) exitFullScreen.call(doc); }
         }
 
-        updateUI();
-        updateSettings();
-        updateTimeSetting();
+        updateUI(); updateSettings(); updateTimeSetting();
     </script>
 </body>
 </html>
